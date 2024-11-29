@@ -1,118 +1,143 @@
-import os
-import sys
 import pickle
 import streamlit as st
 import numpy as np
-from books_recommender.logger.log import logging
-from books_recommender.config.configuration import AppConfiguration
-from books_recommender.pipeline.training_pipeline import TrainingPipeline
-from books_recommender.exception.exception_handler import AppException
+
+# Load necessary data
+model = pickle.load(open('artifacts/model.pkl', 'rb'))
+book_names = pickle.load(open('artifacts/book_names.pkl', 'rb'))
+final_rating = pickle.load(open('artifacts/final_rating.pkl', 'rb'))
+book_pivot = pickle.load(open('artifacts/book_pivot.pkl', 'rb'))
+
+# Import additional backend functions
+from backend import get_books_by_author, get_all_authors
+from backend1 import recommend_books_by_rating
+
+# Helper functions
+def fetch_poster(suggestion):
+    book_name = []
+    ids_index = []
+    poster_url = []
+
+    for book_id in suggestion:
+        book_name.append(book_pivot.index[book_id])
+
+    for name in book_name[0]:
+        ids = np.where(final_rating['title'] == name)[0][0]
+        ids_index.append(ids)
+
+    for idx in ids_index:
+        url = final_rating.iloc[idx]['image_url']
+        poster_url.append(url)
+
+    return poster_url
 
 
-class Recommendation:
-    def __init__(self,app_config = AppConfiguration()):
-        try:
-            self.recommendation_config= app_config.get_recommendation_config()
-        except Exception as e:
-            raise AppException(e, sys) from e
+def recommend_books(book_name):
+    book_list = []
+    book_id = np.where(book_pivot.index == book_name)[0][0]
+    distance, suggestion = model.kneighbors(
+        book_pivot.iloc[book_id, :].values.reshape(1, -1), n_neighbors=6
+    )
+
+    poster_url = fetch_poster(suggestion)
+
+    for i in range(len(suggestion)):
+        books = book_pivot.index[suggestion[i]]
+        for j in books:
+            book_list.append(j)
+
+    return book_list, poster_url
 
 
-    def fetch_poster(self,suggestion):
-        try:
-            book_name = []
-            ids_index = []
-            poster_url = []
-            book_pivot =  pickle.load(open(self.recommendation_config.book_pivot_serialized_objects,'rb'))
-            final_rating =  pickle.load(open(self.recommendation_config.final_rating_serialized_objects,'rb'))
+# Main application
+st.title("Book Recommendation System")
 
-            for book_id in suggestion:
-                book_name.append(book_pivot.index[book_id])
+# Add three buttons
+selected_option = st.radio(
+    "Choose a recommendation method",
+    options=["Based on Previous Book", "Based on Author", "Based on Rating"],
+    key="recommendation_option"
+)
 
-            for name in book_name[0]: 
-                ids = np.where(final_rating['title'] == name)[0][0]
-                ids_index.append(ids)
+if selected_option == "Based on Previous Book":
+    st.header("Recommendation Based on a Book")
+    selected_books = st.selectbox("Type or select a book", book_names)
 
-            for idx in ids_index:
-                url = final_rating.iloc[idx]['image_url']
-                poster_url.append(url)
+    if st.button("Show Recommendation", key="previous_book_button"):
+        recommendation_books, poster_url = recommend_books(selected_books)
 
-            return poster_url
-        
-        except Exception as e:
-            raise AppException(e, sys) from e
-        
+        # Exclude the selected book and limit to 5 recommendations
+        filtered_books = [
+            (title, poster)
+            for title, poster in zip(recommendation_books, poster_url)
+            if title != selected_books
+        ][:5]
 
+        if not filtered_books:
+            st.warning("No recommendations available for the selected book.")
+        else:
+            cols_per_row = 5  # Number of columns per row
+            num_books = len(filtered_books)
+            rows = (num_books // cols_per_row) + (num_books % cols_per_row > 0)
 
-    def recommend_book(self,book_name):
-        try:
-            books_list = []
-            model = pickle.load(open(self.recommendation_config.trained_model_path,'rb'))
-            book_pivot =  pickle.load(open(self.recommendation_config.book_pivot_serialized_objects,'rb'))
-            book_id = np.where(book_pivot.index == book_name)[0][0]
-            distance, suggestion = model.kneighbors(book_pivot.iloc[book_id,:].values.reshape(1,-1), n_neighbors=6 )
+            for row in range(rows):
+                cols = st.columns(cols_per_row)
+                for col_idx, book_idx in enumerate(range(row * cols_per_row, (row + 1) * cols_per_row)):
+                    if book_idx < num_books:
+                        book_title, book_poster = filtered_books[book_idx]
+                        with cols[col_idx]:
+                            st.image(book_poster, use_container_width=True)
+                            st.text(book_title)
 
-            poster_url = self.fetch_poster(suggestion)
-            
-            for i in range(len(suggestion)):
-                    books = book_pivot.index[suggestion[i]]
-                    for j in books:
-                        books_list.append(j)
-            return books_list , poster_url   
-        
-        except Exception as e:
-            raise AppException(e, sys) from e
+elif selected_option == "Based on Author":
+    st.header("Recommendation Based on an Author")
+    all_authors = get_all_authors()
+    selected_author = st.selectbox("Choose an author", all_authors)
 
+    if st.button("Show Books", key="author_button"):
+        if selected_author:
+            books1 = get_books_by_author(selected_author)
+            if books1:
+                st.success(f"Books by {selected_author}:")
+                for book in books1:
+                    st.write(f"- {book}")
+            else:
+                st.warning("No books found for the selected author.")
+        else:
+            st.error("Please select an author.")
 
-    def train_engine(self):
-        try:
-            obj = TrainingPipeline()
-            obj.start_training_pipeline()
-            st.text("Training Completed!")
-            logging.info(f"Recommended successfully!")
-        except Exception as e:
-            raise AppException(e, sys) from e
+elif selected_option == "Based on Rating":
+    st.header("Recommendation Based on Rating")
+    min_rating = st.slider("Select minimum rating", 1, 10, 5, key="rating_slider")
 
-    
-    def recommendations_engine(self,selected_books):
-        try:
-            recommended_books,poster_url = self.recommend_book(selected_books)
-            col1, col2, col3, col4, col5 = st.columns(5)
-            with col1:
-                st.text(recommended_books[1])
-                st.image(poster_url[1])
-            with col2:
-                st.text(recommended_books[2])
-                st.image(poster_url[2])
+    if st.button("Recommend Books", key="rating_button"):
+        recommendations = recommend_books_by_rating(min_rating)
 
-            with col3:
-                st.text(recommended_books[3])
-                st.image(poster_url[3])
-            with col4:
-                st.text(recommended_books[4])
-                st.image(poster_url[4])
-            with col5:
-                st.text(recommended_books[5])
-                st.image(poster_url[5])
-        except Exception as e:
-            raise AppException(e, sys) from e
+        if recommendations:
+            max_recommendations = 5
+            recommendations = recommendations[:max_recommendations]
 
+            st.success(f"Showing top {len(recommendations)} books with ratings = {min_rating}:")
+            cols_per_row = 5  # Number of columns per row
+            num_books = len(recommendations)
+            rows = (num_books // cols_per_row) + (num_books % cols_per_row > 0)
 
-
-if __name__ == "__main__":
-    st.header('ML Based Books Recommender System')
-    st.text("This is a collaborative filtering based recommendation system!")
-
-    obj = Recommendation()
-
-    #Training
-    if st.button('Train Recommender System'):
-        obj.train_engine()
-
-    book_names = pickle.load(open(os.path.join('templates','book_names.pkl') ,'rb'))
-    selected_books = st.selectbox(
-        "Type or select a book from the dropdown",
-        book_names)
-    
-    #recommendation
-    if st.button('Show Recommendation'):
-        obj.recommendations_engine(selected_books)
+            for row in range(rows):
+                cols = st.columns(cols_per_row)
+                for col_idx, book_idx in enumerate(range(row * cols_per_row, (row + 1) * cols_per_row)):
+                    if book_idx < num_books:
+                        book = recommendations[book_idx]
+                        with cols[col_idx]:
+                            st.markdown(
+                                f"""
+                                <div style="text-align: center;">
+                                    <img src="{book['image_url']}" style="width:100%; height:auto; border-radius: 8px; margin-bottom: 10px;" alt="Book Cover">
+                                    <p><b>Title:</b> {book['title']}</p>
+                                    <p><b>Author:</b> {book['author']}</p>
+                                    <p><b>Rating:</b> {book['rating']}</p>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+        else:
+            st.warning("No books found for the selected rating.")
