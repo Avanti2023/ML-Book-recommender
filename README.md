@@ -10,9 +10,6 @@
 - **Content-based Recommendations**  
   Leverages book metadata such as title, author, genre, and description to recommend books tailored to user preferences.
 
-- **Hybrid Model**  
-  Combines the strengths of collaborative filtering and content-based approaches for enhanced accuracy and diversity in recommendations.
-
 - **Visualization of Recommendation Results**  
   Includes visual representations of system performance and recommendation trends for better understanding and insights through "Streamlit"-- open-source Python framework for data scientists and AI/ML engineers to deliver interactive websites in only a few lines of code
 
