@@ -11,6 +11,16 @@ K-Nearest Neighbors (KNN): KNN is used to find books with the highest similarity
 
  ## Technologies Used
 
-- **Programming Language**: Python  
-- **Libraries**: Pandas,Scikit-learn 
+- **Tech Stack**: Python  
 - **Frameworks**: Streamlit
+## OUTPUT:
+
+## i) Recommendation Based on Book:
+ ![image](https://github.com/user-attachments/assets/4906e87d-acbe-44b3-af9d-1ea8a463e117)
+## ii) Recommendation Based on an Author:
+![image](https://github.com/user-attachments/assets/ca8b3b5b-9305-4480-9acb-08217a263f61)
+## iii) Recommendation Based on Rating:
+![image](https://github.com/user-attachments/assets/45806b61-737e-4954-a107-12d3efdab0b6)
+
+
+
