@@ -12,7 +12,7 @@ book_pivot = pickle.load(open('artifacts/book_pivot.pkl', 'rb'))
 from backend import get_books_by_author, get_all_authors
 from backend1 import recommend_books_by_rating
 
-# Helper functions
+# Helper Function to Fetch Book Cover Images
 def fetch_poster(suggestion):
     book_name = []
     ids_index = []
@@ -31,7 +31,7 @@ def fetch_poster(suggestion):
 
     return poster_url
 
-
+# Recommendation Based on a Selected Book
 def recommend_books(book_name):
     book_list = []
     book_id = np.where(book_pivot.index == book_name)[0][0]
@@ -58,7 +58,7 @@ selected_option = st.radio(
     options=["Based on Previous Book", "Based on Author", "Based on Rating"],
     key="recommendation_option"
 )
-
+# Case 1: Recommendation Based on a Book
 if selected_option == "Based on Previous Book":
     st.header("Recommendation Based on a Book")
     selected_books = st.selectbox("Type or select a book", book_names)
@@ -88,7 +88,7 @@ if selected_option == "Based on Previous Book":
                         with cols[col_idx]:
                             st.image(book_poster, use_container_width=True)
                             st.text(book_title)
-
+# Case 2: Recommendation Based on Author
 elif selected_option == "Based on Author":
     st.header("Recommendation Based on an Author")
     all_authors = get_all_authors()
@@ -105,7 +105,7 @@ elif selected_option == "Based on Author":
                 st.warning("No books found for the selected author.")
         else:
             st.error("Please select an author.")
-
+# Case 3: Recommendation Based on Rating
 elif selected_option == "Based on Rating":
     st.header("Recommendation Based on Rating")
     min_rating = st.slider("Select minimum rating", 1, 10, 5, key="rating_slider")
