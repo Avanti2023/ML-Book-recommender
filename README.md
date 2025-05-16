@@ -9,10 +9,19 @@ K-Nearest Neighbors (KNN): KNN is used to find books with the highest similarity
 - User Interface (UI):Streamlit will be used to develop a web-based interface where users can:Select a book from a list or enter their favorite book.View recommendations that include book names and cover images (posters).The interface will display the recommendations in an organized manner, making the system user-friendly and visually engaging.
 
 
- ## Technologies Used
+ ## Tech Stack
 
-- **Tech Stack**: Python  
-- **Frameworks**: Streamlit
+
+| Component     | Tool/Library                                     |
+| ------------- | ------------------------------------------------ |
+| Language      | Python                                           |
+| Data Handling | Pandas, NumPy                                    |
+| Visualization | Matplotlib, Seaborn                              |
+| ML Techniques | KNN (Collaborative Filtering), Cosine Similarity |
+| Dataset       | Kaggle Book Recommendation Dataset               |
+| IDE           | Jupyter Notebook / VS Code                       |
+
+
 ## OUTPUT:
 
 ## i) Recommendation Based on Book:
