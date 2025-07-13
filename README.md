@@ -6,7 +6,12 @@
 Collaborative Filtering: This technique relies on user-item interactions to recommend books. The system will use past user behavior and preferences to suggest relevant books.
 K-Nearest Neighbors (KNN): KNN is used to find books with the highest similarity to the user’s selected book, ensuring the recommendations are tailored.
 
-- User Interface (UI):Streamlit will be used to develop a web-based interface where users can:Select a book from a list or enter their favorite book.View recommendations that include book names and cover images (posters).The interface will display the recommendations in an organized manner, making the system user-friendly and visually engaging.
+- User Interface (UI):Streamlit will be used to develop a web-based interface where users can:
+→ Select a book from a dropdown list or enter the name of their favorite book manually.
+→ View personalized book recommendations, including:
+  → 📚 Book names
+  → 🖼️ Cover images (posters) pulled dynamically
+→ Interact with a user-friendly and visually engaging layout, designed to display recommendations in a structured and attractive format.
 
 
  ## Tech Stack
